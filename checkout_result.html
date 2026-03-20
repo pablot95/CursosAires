@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resultado de Compra - Curso AC Automotor</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        :root{--accent:#F4E32C;--accent-dark:#E5D51F;--bg:#f0f2f5;--dark:#1a1a2e;--card:#fff;--text:#333;--text-light:#777;--success:#27ae60;--danger:#e74c3c;--warning:#f39c12;--radius:12px;--font:'Inter',sans-serif}
+        body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+        .result-card{background:var(--card);border-radius:var(--radius);padding:48px 40px;max-width:520px;width:100%;text-align:center;box-shadow:0 4px 30px rgba(0,0,0,.1)}
+        .result-icon{width:80px;height:80px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;font-size:36px;color:#fff}
+        .result-icon.success{background:var(--success)}
+        .result-icon.error{background:var(--danger)}
+        .result-icon.pending{background:var(--warning)}
+        .result-card h1{font-size:24px;margin-bottom:12px;color:var(--dark)}
+        .result-card p{color:var(--text-light);font-size:15px;line-height:1.7;margin-bottom:8px}
+        .info-box{background:#f8f9fa;border-radius:10px;padding:20px;margin:24px 0;text-align:left;font-size:14px;color:var(--text-light);line-height:1.8}
+        .info-box strong{color:var(--dark)}
+        .btn-back{display:inline-block;padding:14px 32px;background:var(--accent);color:var(--dark);border:none;border-radius:10px;font-size:16px;font-weight:700;font-family:var(--font);cursor:pointer;text-decoration:none;margin-top:16px;transition:background .2s}
+        .btn-back:hover{background:var(--accent-dark)}
+        .btn-course{display:inline-block;padding:14px 32px;background:var(--success);color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:700;font-family:var(--font);cursor:pointer;text-decoration:none;margin-top:12px;transition:background .2s}
+        .btn-course:hover{background:#219653}
+    </style>
+</head>
+<body>
+
+    <div class="result-card" id="resultCard">
+        <!-- Content injected by JS -->
+    </div>
+
+    <script>
+    (function(){
+        var params = new URLSearchParams(window.location.search);
+        var status = params.get('status') || 'unknown';
+        var card = document.getElementById('resultCard');
+
+        if(status === 'approved'){
+            card.innerHTML =
+                '<div class="result-icon success"><i class="fa-solid fa-check"></i></div>' +
+                '<h1>¡Compra realizada con éxito!</h1>' +
+                '<p>Tu pago fue aprobado. En breve vas a recibir un email con tus credenciales de acceso al curso.</p>' +
+                '<div class="info-box">' +
+                '<strong>¿Qué sigue?</strong><br>' +
+                'Revisá tu casilla de email (incluyendo spam) para encontrar tu usuario y contraseña. ' +
+                'Con esos datos podés ingresar al curso desde el botón de abajo.' +
+                '</div>' +
+                '<a href="curso/" class="btn-course"><i class="fa-solid fa-graduation-cap"></i> Ir al Curso</a><br>' +
+                '<a href="index.html" class="btn-back"><i class="fa-solid fa-arrow-left"></i> Volver al inicio</a>';
+        } else if(status === 'pending'){
+            card.innerHTML =
+                '<div class="result-icon pending"><i class="fa-solid fa-clock"></i></div>' +
+                '<h1>Pago pendiente</h1>' +
+                '<p>Tu pago está siendo procesado. Cuando se confirme, vas a recibir un email con las credenciales de acceso.</p>' +
+                '<div class="info-box">' +
+                '<strong>¿Qué hacer?</strong><br>' +
+                'Si pagaste por transferencia o en efectivo, el pago puede demorar hasta 48hs en acreditarse. ' +
+                'Una vez confirmado, te llegará un email automáticamente.' +
+                '</div>' +
+                '<a href="index.html" class="btn-back"><i class="fa-solid fa-arrow-left"></i> Volver al inicio</a>';
+        } else {
+            card.innerHTML =
+                '<div class="result-icon error"><i class="fa-solid fa-xmark"></i></div>' +
+                '<h1>El pago no se pudo completar</h1>' +
+                '<p>Hubo un problema con tu pago. No se realizó ningún cargo. Podés intentar de nuevo.</p>' +
+                '<div class="info-box">' +
+                '<strong>Posibles causas:</strong><br>' +
+                '• Fondos insuficientes<br>' +
+                '• Tarjeta rechazada por el banco<br>' +
+                '• Se canceló el pago<br><br>' +
+                'Si el problema persiste, probá con otro medio de pago.' +
+                '</div>' +
+                '<a href="checkout.html" class="btn-back"><i class="fa-solid fa-rotate-right"></i> Intentar de nuevo</a>';
+        }
+    })();
+    </script>
+</body>
+</html>

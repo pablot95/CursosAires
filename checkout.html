@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - Curso AC Automotor</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        :root{--accent:#F4E32C;--accent-dark:#E5D51F;--bg:#f0f2f5;--dark:#1a1a2e;--card:#fff;--text:#333;--text-light:#777;--border:#e0e0e0;--success:#27ae60;--danger:#e74c3c;--radius:12px;--font:'Inter',sans-serif}
+        body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh}
+        .checkout-wrapper{max-width:960px;margin:0 auto;padding:32px 20px;display:grid;grid-template-columns:1fr 380px;gap:32px;align-items:start}
+        @media(max-width:768px){.checkout-wrapper{grid-template-columns:1fr;padding:16px}}
+        .checkout-header{grid-column:1/-1;display:flex;align-items:center;gap:16px;margin-bottom:8px}
+        .checkout-header a{color:var(--dark);text-decoration:none;font-size:14px;display:flex;align-items:center;gap:6px}
+        .checkout-header h1{font-size:22px;color:var(--dark)}
+
+        .checkout-form{background:var(--card);border-radius:var(--radius);padding:32px;box-shadow:0 2px 12px rgba(0,0,0,.08)}
+        .checkout-form h2{font-size:18px;margin-bottom:20px;color:var(--dark)}
+        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+        .form-row.full{grid-template-columns:1fr}
+        .form-group{display:flex;flex-direction:column;gap:4px}
+        .form-group label{font-size:13px;font-weight:600;color:#555}
+        .form-group input,.form-group select{padding:12px 14px;border:2px solid var(--border);border-radius:8px;font-size:14px;font-family:var(--font);outline:none;transition:border-color .2s}
+        .form-group input:focus,.form-group select:focus{border-color:var(--accent)}
+        .form-group .error-msg{font-size:12px;color:var(--danger);display:none}
+        .form-group.has-error input,.form-group.has-error select{border-color:var(--danger)}
+        .form-group.has-error .error-msg{display:block}
+        @media(max-width:500px){.form-row{grid-template-columns:1fr}}
+
+        .order-summary{background:var(--card);border-radius:var(--radius);padding:32px;box-shadow:0 2px 12px rgba(0,0,0,.08);position:sticky;top:20px}
+        .order-summary h2{font-size:18px;margin-bottom:20px;color:var(--dark)}
+        .summary-item{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #eee;font-size:14px}
+        .summary-item:last-of-type{border-bottom:none}
+        .summary-item .label{color:var(--text-light)}
+        .summary-total{display:flex;justify-content:space-between;padding:16px 0 0;border-top:2px solid var(--dark);margin-top:8px;font-size:18px;font-weight:700}
+        .summary-saving{background:rgba(39,174,96,.1);color:var(--success);padding:8px 12px;border-radius:8px;font-size:13px;font-weight:600;text-align:center;margin-top:12px}
+
+        .btn-pay{width:100%;padding:16px;background:var(--accent);color:var(--dark);border:none;border-radius:10px;font-size:16px;font-weight:700;font-family:var(--font);cursor:pointer;transition:background .2s,transform .1s;margin-top:20px;display:flex;align-items:center;justify-content:center;gap:8px}
+        .btn-pay:hover{background:var(--accent-dark)}
+        .btn-pay:active{transform:scale(.98)}
+        .btn-pay:disabled{opacity:.6;cursor:not-allowed}
+        .btn-pay .spinner{display:none;width:18px;height:18px;border:2px solid rgba(0,0,0,.2);border-top-color:var(--dark);border-radius:50%;animation:spin .6s linear infinite}
+        .btn-pay.loading .spinner{display:inline-block}
+        .btn-pay.loading .btn-label{display:none}
+        @keyframes spin{to{transform:rotate(360deg)}}
+
+        .secure-badge{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:16px;font-size:12px;color:var(--text-light)}
+        .secure-badge i{color:var(--success)}
+
+        .guarantee-box{display:flex;align-items:center;gap:12px;background:#f8f9fa;border-radius:8px;padding:14px;margin-top:16px;font-size:13px;color:var(--text-light)}
+        .guarantee-box i{font-size:20px;color:var(--accent);flex-shrink:0}
+
+        #toast{position:fixed;bottom:32px;right:32px;padding:14px 24px;border-radius:8px;font-size:14px;font-weight:600;color:#fff;z-index:1000;box-shadow:0 4px 20px rgba(0,0,0,.2);transition:opacity .3s,transform .3s}
+        #toast.success{background:var(--success)}
+        #toast.error{background:var(--danger)}
+        #toast.show{opacity:1;transform:translateY(0)}
+        #toast.hidden{opacity:0;transform:translateY(20px);pointer-events:none}
+
+
+    </style>
+</head>
+<body>
+
+    <div class="checkout-wrapper" id="checkoutContent">
+        <div class="checkout-header">
+            <a href="index.html"><i class="fa-solid fa-arrow-left"></i> Volver</a>
+            <h1>Finalizar Compra</h1>
+        </div>
+
+        <div class="checkout-form">
+            <h2><i class="fa-solid fa-user"></i> Tus datos</h2>
+            <form id="checkoutForm" autocomplete="on" novalidate>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="firstName">Nombre *</label>
+                        <input type="text" id="firstName" required autocomplete="given-name">
+                        <span class="error-msg">Ingresá tu nombre</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="lastName">Apellido *</label>
+                        <input type="text" id="lastName" required autocomplete="family-name">
+                        <span class="error-msg">Ingresá tu apellido</span>
+                    </div>
+                </div>
+                <div class="form-row full">
+                    <div class="form-group">
+                        <label for="email">Email *</label>
+                        <input type="email" id="email" required autocomplete="email">
+                        <span class="error-msg">Ingresá un email válido</span>
+                    </div>
+                </div>
+                <div class="form-row full">
+                    <div class="form-group">
+                        <label for="phone">Teléfono (opcional)</label>
+                        <input type="tel" id="phone" autocomplete="tel">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-pay" id="btnPay">
+                    <span class="spinner"></span>
+                    <span class="btn-label"><i class="fa-solid fa-lock"></i> Pagar con MercadoPago</span>
+                </button>
+            </form>
+            <div class="secure-badge"><i class="fa-solid fa-lock"></i> Pago seguro procesado por MercadoPago</div>
+        </div>
+
+        <div class="order-summary">
+            <h2>Resumen del pedido</h2>
+            <div class="summary-item"><span class="label">Curso Completo AC Automotor</span><span id="sumPrice">$39.999</span></div>
+            <div class="summary-item"><span class="label">4 Bonus incluidos</span><span>Gratis</span></div>
+            <div class="summary-total"><span>Total</span><span id="sumTotal">$39.999 ARS</span></div>
+            <div class="summary-saving" id="sumSaving"><i class="fa-solid fa-tag"></i> Ahorrás $50.000 con esta oferta</div>
+            <div class="guarantee-box"><i class="fa-solid fa-shield-halved"></i><span>7 días de garantía. Si no te sirve, te devolvemos el 100%.</span></div>
+        </div>
+    </div>
+
+
+
+    <div id="toast" class="hidden"></div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script>
+    (function(){
+        'use strict';
+
+        firebase.initializeApp({
+            apiKey: "AIzaSyCZNcCA4l_jj6W7ZFAo8pNAgDW2WASW_Ro",
+            authDomain: "cursoaires-1cada.firebaseapp.com",
+            projectId: "cursoaires-1cada",
+            storageBucket: "cursoaires-1cada.firebasestorage.app",
+            messagingSenderId: "955097109164",
+            appId: "1:955097109164:web:c1ebf82ef88c2a946d4509"
+        });
+        var db = firebase.firestore();
+
+        // Load pricing from Firebase
+        db.collection('siteContent').doc('precio').get().then(function(doc){
+            if(!doc.exists) return;
+            var d = doc.data();
+            if(d.currency && d.amount){
+                document.getElementById('sumPrice').textContent = d.currency + d.amount;
+                document.getElementById('sumTotal').textContent = d.currency + d.amount + (d.period ? ' ' + d.period : '');
+            }
+            // Calcular ahorro automaticamente
+            var oldNum = d.oldPrice ? parseInt(d.oldPrice.replace(/[^0-9]/g, ''), 10) : 0;
+            var newNum = d.amount ? parseInt(String(d.amount).replace(/[^0-9]/g, ''), 10) : 0;
+            if(oldNum > 0 && newNum > 0 && oldNum > newNum){
+                var diff = oldNum - newNum;
+                var el = document.getElementById('sumSaving');
+                el.innerHTML = '<i class="fa-solid fa-tag"></i> Ahorrás $' + diff.toLocaleString('es-AR') + ' con esta oferta';
+            } else if(d.saving){
+                var el = document.getElementById('sumSaving');
+                el.innerHTML = '<i class="fa-solid fa-tag"></i> ' + d.saving;
+            }
+        });
+
+        var form = document.getElementById('checkoutForm');
+        var btnPay = document.getElementById('btnPay');
+        var toast = document.getElementById('toast');
+
+        function showToast(msg, type){
+            toast.textContent = msg;
+            toast.className = type + ' show';
+            clearTimeout(toast._t);
+            toast._t = setTimeout(function(){ toast.className = 'hidden'; }, 4000);
+        }
+
+        function validateForm(){
+            var valid = true;
+            var fields = [
+                { id: 'firstName', check: function(v){ return v.trim().length > 0; } },
+                { id: 'lastName', check: function(v){ return v.trim().length > 0; } },
+                { id: 'email', check: function(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); } }
+            ];
+            fields.forEach(function(f){
+                var el = document.getElementById(f.id);
+                var group = el.closest('.form-group');
+                if(!f.check(el.value)){
+                    group.classList.add('has-error');
+                    valid = false;
+                } else {
+                    group.classList.remove('has-error');
+                }
+            });
+            return valid;
+        }
+
+        form.addEventListener('submit', function(e){
+            e.preventDefault();
+            if(!validateForm()) return;
+
+            btnPay.classList.add('loading');
+            btnPay.disabled = true;
+
+            var emailVal = document.getElementById('email').value.trim().toLowerCase();
+            var firstName = document.getElementById('firstName').value.trim();
+            var lastName = document.getElementById('lastName').value.trim();
+            var phone = document.getElementById('phone').value.trim();
+
+            // Send buyer data to backend to create MP preference
+            fetch('admin/create_preference.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: emailVal,
+                    firstName: firstName,
+                    lastName: lastName,
+                    phone: phone
+                })
+            })
+            .then(function(res){ return res.json(); })
+            .then(function(data){
+                if(data.init_point){
+                    // Redirect to MercadoPago checkout
+                    window.location.href = data.init_point;
+                } else {
+                    throw new Error(data.error || 'No se pudo crear el pago');
+                }
+            })
+            .catch(function(err){
+                btnPay.classList.remove('loading');
+                btnPay.disabled = false;
+                showToast('Error al conectar con MercadoPago: ' + err.message, 'error');
+            });
+        });
+
+        // Clear errors on input
+        document.querySelectorAll('.form-group input').forEach(function(input){
+            input.addEventListener('input', function(){
+                input.closest('.form-group').classList.remove('has-error');
+            });
+        });
+    })();
+    </script>
+</body>
+</html>

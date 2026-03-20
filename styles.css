@@ -101,7 +101,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .section-header h2 {
-    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    font-size: 2rem;
     margin-bottom: 16px;
 }
 
@@ -147,7 +147,7 @@ h1, h2, h3, h4, h5, h6 {
     display: inline-flex;
     align-items: center;
     gap: 10px;
-    padding: 16px 36px;
+    padding: 10px 30px;
     border-radius: var(--radius-sm);
     font-family: var(--font-heading);
     font-weight: 700;
@@ -345,6 +345,22 @@ header.scrolled {
     color: var(--text-primary);
 }
 
+.nav-login {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: 2px solid rgba(255,255,255,0.6);
+    background-color: #e5e5e5;
+    padding: 8px 18px;
+    border-radius: var(--radius-sm);
+    font-weight: 600 !important;
+    transition: border-color 0.2s, color 0.2s;
+}
+.nav-login:hover {
+    border-color: var(--yellow);
+    color: var(--yellow) !important;
+}
+
 .nav-cta {
     background: var(--yellow);
     color: var(--black) !important;
@@ -395,7 +411,7 @@ header.scrolled {
     min-height: 100vh;
     display: flex;
     align-items: center;
-    padding: 140px 0 80px;
+    padding:  40px 20px;
     overflow: hidden;
     background: linear-gradient(135deg, #fefef6 0%, #ffffff 40%, #f8f8f0 100%);
 }
@@ -446,7 +462,7 @@ header.scrolled {
 }
 
 #hero h1 {
-    font-size: clamp(2rem, 4.5vw, 3.2rem);
+    font-size: 3rem;
     margin-bottom: 20px;
     line-height: 1.15;
 }
@@ -1122,7 +1138,7 @@ header.scrolled {
 
 .pricing-header {
     background: var(--black);
-    padding: 40px 40px 32px;
+    padding: 20px 20px 16px;
     text-align: center;
 }
 
@@ -1132,17 +1148,17 @@ header.scrolled {
     color: var(--black);
     padding: 6px 20px;
     border-radius: 50px;
-    font-size: 0.75rem;
+    font-size: 0.6rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 1.5px;
-    margin-bottom: 16px;
+    margin-bottom: 10px;
     font-family: var(--font-heading);
 }
 
 .pricing-header h2 {
     color: var(--white);
-    font-size: 1.6rem;
+    font-size: 1.3rem;
     margin-bottom: 8px;
 }
 
@@ -1152,12 +1168,12 @@ header.scrolled {
 }
 
 .pricing-body {
-    padding: 40px;
+    padding: 20PX 40px;
     text-align: center;
 }
 
 .pricing-amounts {
-    margin-bottom: 32px;
+    margin-bottom: 16px;
 }
 
 .price-old {
@@ -1193,7 +1209,7 @@ header.scrolled {
 .amount {
     font-family: var(--font-heading);
     font-weight: 900;
-    font-size: 3.5rem;
+    font-size: 2.5rem;
     color: var(--text-primary);
     line-height: 1;
 }
@@ -1662,7 +1678,7 @@ footer {
 
 .whatsapp-float {
     position: fixed;
-    bottom: 100px;
+    bottom: 20px;
     right: 24px;
     width: 60px;
     height: 60px;
@@ -1947,7 +1963,7 @@ footer {
     }
 
     #hero {
-        padding: 120px 0 60px;
+        padding: 40px 0 60px;
         min-height: auto;
     }
 
@@ -2020,6 +2036,7 @@ footer {
 
     .whatsapp-float {
         bottom: 80px;
+        right: 40px;
     }
 
     .mockup-frame {

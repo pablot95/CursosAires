@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Curso - AC Automotor</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        :root{--accent:#F4E32C;--accent-dark:#E5D51F;--bg:#0f1117;--bg2:#1a1b27;--card:#21222d;--text:#e0e0e0;--text-light:#888;--border:#2a2b36;--success:#27ae60;--danger:#e74c3c;--radius:12px;--font:'Inter',sans-serif}
+        body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh}
+
+        /* LOGIN */
+        .login-wrapper{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+        .login-card{background:var(--card);border-radius:var(--radius);padding:40px;width:100%;max-width:420px;box-shadow:0 4px 30px rgba(0,0,0,.3)}
+        .login-card h1{font-size:22px;margin-bottom:8px;text-align:center}
+        .login-card p{font-size:14px;color:var(--text-light);text-align:center;margin-bottom:28px}
+        .login-card .form-group{margin-bottom:16px}
+        .login-card label{display:block;font-size:13px;font-weight:600;color:var(--text-light);margin-bottom:4px}
+        .login-card input{width:100%;padding:12px 14px;background:var(--bg2);border:2px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;font-family:var(--font);outline:none;transition:border-color .2s}
+        .login-card input:focus{border-color:var(--accent)}
+        .login-card .btn{width:100%;padding:14px;background:var(--accent);color:#000;border:none;border-radius:10px;font-size:15px;font-weight:700;font-family:var(--font);cursor:pointer;margin-top:8px;transition:background .2s}
+        .login-card .btn:hover{background:var(--accent-dark)}
+        .login-card .btn:disabled{opacity:.6;cursor:not-allowed}
+        .login-error{color:var(--danger);font-size:13px;text-align:center;margin-top:12px;display:none}
+        .forgot-link{display:block;text-align:center;margin-top:14px;font-size:13px;color:var(--text-light);cursor:pointer;background:none;border:none;font-family:var(--font);width:100%;text-decoration:underline}
+        .forgot-link:hover{color:var(--accent)}
+        .forgot-success{color:var(--success);font-size:13px;text-align:center;margin-top:12px;display:none}
+
+        /* DASHBOARD */
+        .curso-app{display:none}
+        .curso-app.active{display:block}
+        .curso-header{background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+        .curso-header h1{font-size:18px;display:flex;align-items:center;gap:8px}
+        .curso-header h1 i{color:var(--accent)}
+        .header-user{display:flex;align-items:center;gap:12px;font-size:14px}
+        .header-user span{color:var(--text-light)}
+        .btn-logout{background:none;border:1px solid var(--border);color:var(--text-light);padding:8px 14px;border-radius:8px;font-size:13px;font-family:var(--font);cursor:pointer;transition:all .2s}
+        .btn-logout:hover{border-color:var(--danger);color:var(--danger)}
+
+        .curso-layout{display:grid;grid-template-columns:280px 1fr;min-height:calc(100vh - 56px)}
+        @media(max-width:768px){.curso-layout{grid-template-columns:1fr}.curso-sidebar{display:none}.curso-sidebar.open{display:block;position:fixed;top:56px;left:0;width:280px;height:calc(100vh - 56px);z-index:20}.toggle-sidebar{display:flex!important}}
+
+        .curso-sidebar{background:var(--bg2);border-right:1px solid var(--border);overflow-y:auto;padding:16px 0}
+        .sidebar-module{margin-bottom:4px}
+        .module-title{padding:12px 20px;font-size:13px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:8px;cursor:pointer;transition:color .2s}
+        .module-title:hover{color:var(--accent)}
+        .module-title i{font-size:10px;transition:transform .2s}
+        .module-title.expanded i{transform:rotate(90deg)}
+        .module-lessons{display:none;padding:0 12px 8px}
+        .module-title.expanded + .module-lessons{display:block}
+        .lesson-item{padding:10px 16px;border-radius:8px;font-size:13px;color:var(--text-light);cursor:pointer;display:flex;align-items:center;gap:10px;transition:all .2s}
+        .lesson-item:hover{background:var(--card);color:var(--text)}
+        .lesson-item.active{background:rgba(244,227,44,.1);color:var(--accent)}
+        .lesson-item i{font-size:12px;flex-shrink:0}
+
+        .curso-content{padding:32px;overflow-y:auto}
+        .content-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:400px;color:var(--text-light);text-align:center}
+        .content-empty i{font-size:48px;margin-bottom:16px;color:var(--border)}
+        .content-empty h2{font-size:20px;margin-bottom:8px;color:var(--text)}
+
+        .video-player{width:100%;max-width:900px;margin:0 auto}
+        .video-player h2{font-size:20px;margin-bottom:16px}
+        .video-container{position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:var(--radius);background:#000;margin-bottom:20px}
+        .video-container iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0}
+        .video-description{font-size:14px;color:var(--text-light);line-height:1.8;background:var(--card);padding:20px;border-radius:var(--radius)}
+
+        .toggle-sidebar{display:none;align-items:center;justify-content:center;background:none;border:none;color:var(--text);font-size:20px;cursor:pointer;padding:4px 12px}
+
+        .welcome-box{text-align:center;max-width:600px;margin:60px auto}
+        .welcome-box h2{font-size:24px;margin-bottom:12px}
+        .welcome-box p{color:var(--text-light);font-size:15px;line-height:1.7}
+
+        .file-download{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 22px;margin-top:20px;transition:border-color .2s}
+        .file-download:hover{border-color:var(--accent)}
+        .file-download-icon{font-size:28px;color:#e74c3c;flex-shrink:0}
+        .file-download-info{flex:1;min-width:0}
+        .file-download-info .file-title{font-size:14px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .file-download-info .file-label{font-size:12px;color:var(--text-light);margin-top:2px}
+        .file-download-btn{display:inline-flex;align-items:center;gap:8px;background:var(--accent);color:#000;padding:10px 20px;border-radius:8px;text-decoration:none;font-size:13px;font-weight:700;font-family:var(--font);transition:background .2s;flex-shrink:0}
+        .file-download-btn:hover{background:var(--accent-dark)}
+        .file-download-btn i{font-size:14px}
+
+        .lesson-icon-file{color:#e74c3c}
+
+        .wa-banner{display:inline-flex;align-items:center;gap:10px;background:rgba(37,211,102,.12);border:1px solid rgba(37,211,102,.3);border-radius:12px;padding:14px 22px;margin-top:28px;text-decoration:none;color:#25d366;font-size:15px;font-weight:700;transition:background .2s}
+        .wa-banner:hover{background:rgba(37,211,102,.22)}
+        .wa-banner i{font-size:22px}
+
+        .sidebar-wa{padding:16px;border-top:1px solid var(--border);margin-top:8px}
+        .sidebar-wa a{display:flex;align-items:center;gap:10px;background:rgba(37,211,102,.1);border:1px solid rgba(37,211,102,.25);border-radius:10px;padding:11px 14px;text-decoration:none;color:#25d366;font-size:13px;font-weight:600;transition:background .2s}
+        .sidebar-wa a:hover{background:rgba(37,211,102,.2)}
+        .sidebar-wa a i{font-size:18px;flex-shrink:0}
+    </style>
+</head>
+<body>
+
+    <!-- LOGIN SCREEN -->
+    <div class="login-wrapper" id="loginScreen">
+        <div class="login-card">
+            <h1><i class="fa-solid fa-graduation-cap" style="color:var(--accent)"></i> Acceso al Curso</h1>
+            <p>Ingresá con el email y contraseña que recibiste al comprar</p>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" required autocomplete="email">
+                </div>
+                <div class="form-group">
+                    <label for="loginPass">Contraseña</label>
+                    <input type="password" id="loginPass" required autocomplete="current-password">
+                </div>
+                <button type="submit" class="btn" id="btnLogin">Ingresar</button>
+            </form>
+            <button class="forgot-link" id="btnForgot">¿Olvidaste tu contraseña?</button>
+            <div class="login-error" id="loginError"></div>
+            <div class="forgot-success" id="forgotSuccess">✅ Te enviamos un email para restablecer tu contraseña.</div>
+        </div>
+    </div>
+
+    <!-- CURSO APP -->
+    <div class="curso-app" id="cursoApp">
+        <div class="curso-header">
+            <div style="display:flex;align-items:center;gap:8px">
+                <button class="toggle-sidebar" id="toggleSidebar"><i class="fa-solid fa-bars"></i></button>
+                <h1><i class="fa-solid fa-graduation-cap"></i> Mi Curso</h1>
+            </div>
+            <div class="header-user">
+                <span id="userEmail"></span>
+                <button class="btn-logout" id="btnLogout"><i class="fa-solid fa-right-from-bracket"></i> Salir</button>
+            </div>
+        </div>
+        <div class="curso-layout">
+            <div class="curso-sidebar" id="sidebar"></div>
+            <div class="curso-content" id="contentArea">
+                <div class="welcome-box">
+                    <h2>¡Bienvenido al curso!</h2>
+                    <p>Seleccioná una lección del menú lateral para comenzar.</p>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script>
+    (function(){
+        'use strict';
+
+        firebase.initializeApp({
+            apiKey: "AIzaSyCZNcCA4l_jj6W7ZFAo8pNAgDW2WASW_Ro",
+            authDomain: "cursoaires-1cada.firebaseapp.com",
+            projectId: "cursoaires-1cada",
+            storageBucket: "cursoaires-1cada.firebasestorage.app",
+            messagingSenderId: "955097109164",
+            appId: "1:955097109164:web:c1ebf82ef88c2a946d4509"
+        });
+        var db = firebase.firestore();
+        var auth = firebase.auth();
+
+        var loginScreen = document.getElementById('loginScreen');
+        var cursoApp = document.getElementById('cursoApp');
+        var loginForm = document.getElementById('loginForm');
+        var loginError = document.getElementById('loginError');
+        var sidebar = document.getElementById('sidebar');
+        var contentArea = document.getElementById('contentArea');
+
+        // Helper to escape HTML
+        function esc(s){ var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+        // Auth state listener
+        auth.onAuthStateChanged(function(user){
+            if(user){
+                loginScreen.style.display = 'none';
+                cursoApp.classList.add('active');
+                document.getElementById('userEmail').textContent = user.email;
+                loadCourseContent();
+            } else {
+                loginScreen.style.display = 'flex';
+                cursoApp.classList.remove('active');
+            }
+        });
+
+        // Login
+        loginForm.addEventListener('submit', function(e){
+            e.preventDefault();
+            loginError.style.display = 'none';
+            var email = document.getElementById('loginEmail').value.trim();
+            var pass = document.getElementById('loginPass').value;
+            document.getElementById('btnLogin').disabled = true;
+
+            auth.signInWithEmailAndPassword(email, pass)
+                .then(function(){
+                    // onAuthStateChanged handles the rest
+                })
+                .catch(function(err){
+                    loginError.style.display = 'block';
+                    if(err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential'){
+                        loginError.textContent = 'Email o contraseña incorrectos';
+                    } else {
+                        loginError.textContent = 'Error al ingresar. Intentá de nuevo.';
+                    }
+                    document.getElementById('btnLogin').disabled = false;
+                });
+        });
+
+        // Logout
+        document.getElementById('btnLogout').addEventListener('click', function(){ auth.signOut(); });
+
+        // Forgot password
+        document.getElementById('btnForgot').addEventListener('click', function(){
+            var email = document.getElementById('loginEmail').value.trim();
+            var forgotSuccess = document.getElementById('forgotSuccess');
+            var loginError = document.getElementById('loginError');
+            if(!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+                loginError.textContent = 'Ingresá tu email arriba para resetear la contraseña.';
+                loginError.style.display = 'block';
+                forgotSuccess.style.display = 'none';
+                return;
+            }
+            loginError.style.display = 'none';
+            auth.sendPasswordResetEmail(email)
+                .then(function(){
+                    forgotSuccess.style.display = 'block';
+                })
+                .catch(function(){
+                    forgotSuccess.style.display = 'block'; // No revelar si el email existe o no
+                });
+        });
+
+        // Toggle sidebar (mobile)
+        document.getElementById('toggleSidebar').addEventListener('click', function(){
+            sidebar.classList.toggle('open');
+        });
+
+        function loadCourseContent(){
+            db.collection('courseContent').orderBy('order').get()
+                .then(function(snap){
+                    if(snap.empty){
+                        sidebar.innerHTML = '<div style="padding:20px;color:var(--text-light);font-size:13px;text-align:center">El contenido del curso se está preparando...</div>';
+                        contentArea.innerHTML = '<div class="content-empty"><i class="fa-solid fa-book-open"></i><h2>Próximamente</h2><p>El contenido del curso se está preparando. Volvé pronto.</p></div>';
+                        return;
+                    }
+
+                    var modules = [];
+                    snap.forEach(function(doc){
+                        modules.push(Object.assign({id: doc.id}, doc.data()));
+                    });
+
+                    renderSidebar(modules);
+                });
+        }
+
+        function renderSidebar(modules){
+            var waHtml = '<div class="sidebar-wa"><a href="https://chat.whatsapp.com/EAjW350vANqCUprh72dB5o?mode=gi_t" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-whatsapp"></i> Unite a la comunidad</a></div>';
+            var html = '';
+            modules.forEach(function(mod, idx){
+                html += '<div class="sidebar-module">';
+                html += '<div class="module-title' + (idx === 0 ? ' expanded' : '') + '" onclick="this.classList.toggle(\'expanded\')">';
+                html += '<i class="fa-solid fa-chevron-right"></i> ' + esc(mod.title || 'Módulo ' + (idx + 1));
+                html += '</div>';
+                html += '<div class="module-lessons"' + (idx === 0 ? ' style="display:block"' : '') + '>';
+                if(mod.lessons && mod.lessons.length){
+                    mod.lessons.forEach(function(lesson, li){
+                        var hasFile = lesson.fileUrl && !lesson.videoUrl;
+                        var iconClass = hasFile ? 'fa-solid fa-file-pdf lesson-icon-file' : 'fa-solid fa-play-circle';
+                        html += '<div class="lesson-item" data-module="' + mod.id + '" data-lesson="' + li + '" onclick="window._selectLesson(this,\'' + mod.id + '\',' + li + ')">';
+                        html += '<i class="' + iconClass + '"></i> ' + esc(lesson.title || 'Lección ' + (li + 1));
+                        html += '</div>';
+                    });
+                } else {
+                    html += '<div style="padding:8px 16px;font-size:12px;color:var(--text-light)">Sin lecciones aún</div>';
+                }
+                html += '</div></div>';
+            });
+            sidebar.innerHTML = html + waHtml;
+        }
+
+        window._selectLesson = function(el, moduleId, lessonIndex){
+            // Mark active
+            document.querySelectorAll('.lesson-item').forEach(function(l){ l.classList.remove('active'); });
+            el.classList.add('active');
+
+            // Close sidebar on mobile
+            sidebar.classList.remove('open');
+
+            // Load lesson content
+            db.collection('courseContent').doc(moduleId).get().then(function(doc){
+                if(!doc.exists) return;
+                var mod = doc.data();
+                var lesson = mod.lessons && mod.lessons[lessonIndex];
+                if(!lesson){
+                    contentArea.innerHTML = '<div class="content-empty"><i class="fa-solid fa-circle-exclamation"></i><h2>Lección no encontrada</h2></div>';
+                    return;
+                }
+
+                var html = '<div class="video-player">';
+                html += '<h2>' + esc(lesson.title) + '</h2>';
+                if(lesson.videoUrl){
+                    if(isDirectVideo(lesson.videoUrl)){
+                        html += '<div class="video-container video-native"><video src="' + esc(lesson.videoUrl) + '" controls playsinline preload="metadata" style="position:absolute;top:0;left:0;width:100%;height:100%"></video></div>';
+                    } else {
+                        var embedUrl = convertToEmbed(lesson.videoUrl);
+                        html += '<div class="video-container"><iframe src="' + esc(embedUrl) + '" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>';
+                    }
+                }
+                if(lesson.fileUrl){
+                    var displayName = lesson.fileName || 'Archivo adjunto';
+                    html += '<div class="file-download">';
+                    html += '<i class="fa-solid fa-file-pdf file-download-icon"></i>';
+                    html += '<div class="file-download-info"><div class="file-title">' + esc(displayName) + '</div><div class="file-label">Material descargable</div></div>';
+                    html += '<a class="file-download-btn" href="' + esc(lesson.fileUrl) + '" download="' + esc(displayName) + '" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-download"></i> Descargar</a>';
+                    html += '</div>';
+                }
+                if(lesson.description){
+                    html += '<div class="video-description">' + esc(lesson.description) + '</div>';
+                }
+                html += '</div>';
+                contentArea.innerHTML = html;
+            });
+        };
+
+        function isDirectVideo(url){
+            return /\.(mp4|webm|ogg)(\?|$)/i.test(url) || /^videos\//i.test(url);
+        }
+
+        function convertToEmbed(url){
+            // YouTube
+            var yt = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+            if(yt) return 'https://www.youtube.com/embed/' + yt[1];
+            // Vimeo
+            var vm = url.match(/vimeo\.com\/(\d+)/);
+            if(vm) return 'https://player.vimeo.com/video/' + vm[1];
+            return url;
+        }
+
+    })();
+    </script>
+</body>
+</html>

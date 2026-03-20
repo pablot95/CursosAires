@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - CursosAires</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../admin/styles.css">
+</head>
+<body>
+
+    <div id="loginScreen">
+        <div class="login-card">
+            <div class="login-logo">
+                <i class="fa-solid fa-gear"></i>
+            </div>
+            <h1>Panel de Administración</h1>
+            <p>Ingresá tus credenciales para continuar</p>
+            <form id="loginForm" autocomplete="off">
+                <div class="form-group">
+                    <label for="loginUser">Usuario</label>
+                    <input type="text" id="loginUser" placeholder="Tu usuario" required autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label for="loginPass">Contraseña</label>
+                    <input type="password" id="loginPass" placeholder="Tu contraseña" required autocomplete="off">
+                </div>
+                <button type="submit" class="btn-login">Ingresar</button>
+                <p id="loginError" class="login-error hidden">Credenciales incorrectas</p>
+            </form>
+        </div>
+    </div>
+
+    <div id="dashboard" class="hidden">
+        <header class="admin-topbar">
+            <div class="topbar-left">
+                <i class="fa-solid fa-gear topbar-icon"></i>
+                <span class="topbar-title">Admin Panel</span>
+            </div>
+            <div class="topbar-tabs">
+                <button class="tab-btn active" data-tab="contenido"><i class="fa-solid fa-pen-to-square"></i> Contenido</button>
+                <button class="tab-btn" data-tab="ordenes"><i class="fa-solid fa-receipt"></i> Órdenes de compra</button>
+                <button class="tab-btn" data-tab="curso"><i class="fa-solid fa-graduation-cap"></i> Curso</button>
+            </div>
+            <button id="logoutBtn" class="btn-logout-top"><i class="fa-solid fa-right-from-bracket"></i> Salir</button>
+        </header>
+        <main id="mainContent">
+            <!-- TAB: Contenido -->
+            <div class="tab-panel active" id="panel-contenido">
+                <div id="sectionHeader">
+                    <h1 id="sectionTitle">Contenido de la Landing</h1>
+                    <p id="sectionDesc">Editá el contenido de cada sección y guardá los cambios.</p>
+                </div>
+                <div id="formContainer"></div>
+            </div>
+            <!-- TAB: Órdenes -->
+            <div class="tab-panel" id="panel-ordenes">
+                <div class="panel-header">
+                    <h1><i class="fa-solid fa-receipt"></i> Órdenes de compra</h1>
+                    <p>Listado de compras realizadas por los alumnos</p>
+                </div>
+                <div class="orders-toolbar">
+                    <button class="btn-refresh" id="btnRefreshOrders"><i class="fa-solid fa-arrows-rotate"></i> Actualizar</button>
+                    <span class="orders-count" id="ordersCount"></span>
+                </div>
+                <div id="ordersContainer"><p class="empty-state">Cargando órdenes...</p></div>
+            </div>
+            <!-- TAB: Curso -->
+            <div class="tab-panel" id="panel-curso">
+                <div class="panel-header">
+                    <h1><i class="fa-solid fa-graduation-cap"></i> Contenido del Curso</h1>
+                    <p>Administrá los módulos y lecciones que ven los alumnos</p>
+                </div>
+                <div class="course-toolbar">
+                    <button class="btn-add-module" id="btnAddModule"><i class="fa-solid fa-plus"></i> Agregar Módulo</button>
+                </div>
+                <div id="courseContainer"><p class="empty-state">Cargando contenido del curso...</p></div>
+
+                <!-- Sección Usuarios -->
+                <div class="users-section">
+                    <div class="users-section-header">
+                        <div>
+                            <h2><i class="fa-solid fa-users"></i> Usuarios Inscritos</h2>
+                            <p>Administrá los usuarios con acceso al curso</p>
+                        </div>
+                        <div class="users-toolbar">
+                            <span class="orders-count" id="usersCount"></span>
+                            <button class="btn-refresh" id="btnRefreshUsers"><i class="fa-solid fa-arrows-rotate"></i> Actualizar</button>
+                        </div>
+                    </div>
+                    <div id="usersContainer"><p class="empty-state">Cargando usuarios...</p></div>
+                </div>
+            </div>
+            <div id="toast" class="toast hidden"></div>
+        </main>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="../admin/firebase.js"></script>
+    <script src="../admin/admin.js"></script>
+</body>
+</html>

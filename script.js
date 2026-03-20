@@ -13,6 +13,10 @@
     endDate.setDate(endDate.getDate() + 3);
     endDate.setHours(23, 59, 59, 0);
 
+    window._setCountdownDate = function(dateStr) {
+        if(dateStr) endDate = new Date(dateStr);
+    };
+
     function updateCountdown(){
         var now = new Date().getTime();
         var diff = endDate.getTime() - now;
@@ -210,6 +214,371 @@
             playIcon.classList.remove('fa-pause');
             playIcon.classList.add('fa-play');
         });
+    }
+
+    // ==================== FIREBASE DATA LOADING ====================
+    if(typeof firebase !== 'undefined'){
+        var firebaseConfig = {
+            apiKey: "AIzaSyCZNcCA4l_jj6W7ZFAo8pNAgDW2WASW_Ro",
+            authDomain: "cursoaires-1cada.firebaseapp.com",
+            projectId: "cursoaires-1cada",
+            storageBucket: "cursoaires-1cada.firebasestorage.app",
+            messagingSenderId: "955097109164",
+            appId: "1:955097109164:web:c1ebf82ef88c2a946d4509"
+        };
+        if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        var db = firebase.firestore();
+
+        db.collection('siteContent').get().then(function(snapshot){
+            var siteData = {};
+            snapshot.forEach(function(doc){ siteData[doc.id] = doc.data(); });
+
+            if(siteData.topBar) loadTopBar(siteData.topBar);
+            if(siteData.stats) loadStats(siteData.stats);
+            if(siteData.contenido) loadContenido(siteData.contenido);
+            if(siteData.modulos) loadModulos(siteData.modulos);
+            if(siteData.videoPreview) loadVideoPreview(siteData.videoPreview);
+            if(siteData.bonus) loadBonus(siteData.bonus);
+            if(siteData.sinCurso) loadSinCurso(siteData.sinCurso);
+            if(siteData.precio) loadPrecio(siteData.precio);
+
+            // Re-observe new dynamic elements for animations
+            document.querySelectorAll('[data-animate]:not(.animated)').forEach(function(el){
+                observer.observe(el);
+            });
+        }).catch(function(err){
+            console.warn('Firebase: usando contenido estático.', err);
+        });
+    }
+
+    function esc(str){ 
+        if(!str && str !== 0) return '';
+        var d = document.createElement('div');
+        d.textContent = String(str);
+        return d.innerHTML;
+    }
+
+    function loadTopBar(d){
+        var bar = document.querySelector('.top-bar-inner');
+        if(!bar) return;
+        var span = bar.querySelector('span');
+        if(span && d.text) span.textContent = d.text;
+        var cta = bar.querySelector('.top-bar-cta');
+        if(cta && d.ctaText) cta.textContent = d.ctaText;
+        if(d.countdownDate) window._setCountdownDate(d.countdownDate);
+    }
+
+    function loadStats(d){
+        if(!d.items || !d.items.length) return;
+        var grid = document.querySelector('.stats-grid');
+        if(!grid) return;
+        grid.innerHTML = '';
+        d.items.forEach(function(item, i){
+            var div = document.createElement('div');
+            div.className = 'stat-item';
+            div.setAttribute('data-animate', 'fade-up');
+            if(i > 0) div.setAttribute('data-delay', String(i * 100));
+            var numSpan = document.createElement('span');
+            numSpan.className = 'stat-number';
+            numSpan.setAttribute('data-count', String(item.number));
+            numSpan.textContent = '0';
+            var sufSpan = document.createElement('span');
+            sufSpan.className = 'stat-suffix';
+            sufSpan.textContent = item.suffix || '';
+            var p = document.createElement('p');
+            p.textContent = item.label;
+            div.appendChild(numSpan);
+            div.appendChild(sufSpan);
+            div.appendChild(p);
+            grid.appendChild(div);
+        });
+        // Re-observe for animations
+        statNumbers = document.querySelectorAll('.stat-number');
+    }
+
+    function loadContenido(d){
+        var section = document.getElementById('contenido');
+        if(!section) return;
+        var tag = section.querySelector('.section-tag');
+        if(tag && d.tag) tag.textContent = d.tag;
+        var h2 = section.querySelector('.content-info h2');
+        if(h2 && d.title) h2.textContent = d.title;
+        var desc = section.querySelector('.content-info > p');
+        if(desc && d.description) desc.textContent = d.description;
+        if(d.image){
+            var img = section.querySelector('.media-stack img');
+            if(img) img.src = d.image;
+        }
+        if(d.items && d.items.length){
+            var ul = section.querySelector('.content-list');
+            if(ul){
+                ul.innerHTML = '';
+                d.items.forEach(function(text){
+                    var li = document.createElement('li');
+                    var icon = document.createElement('i');
+                    icon.className = 'fa-solid fa-check';
+                    li.appendChild(icon);
+                    li.appendChild(document.createTextNode(' ' + text));
+                    ul.appendChild(li);
+                });
+            }
+        }
+    }
+
+    function loadModulos(d){
+        var section = document.getElementById('modulos');
+        if(!section) return;
+        var headerTag = section.querySelector('.section-header .section-tag');
+        if(headerTag && d.tag) headerTag.textContent = d.tag;
+        var headerH2 = section.querySelector('.section-header h2');
+        if(headerH2 && d.title) headerH2.textContent = d.title;
+        var headerP = section.querySelector('.section-header p');
+        if(headerP && d.description) headerP.textContent = d.description;
+
+        if(d.items && d.items.length){
+            var timeline = section.querySelector('.modules-timeline');
+            if(!timeline) return;
+            timeline.innerHTML = '';
+            d.items.forEach(function(mod, i){
+                var dir = (i % 2 === 0) ? 'fade-right' : 'fade-left';
+                var item = document.createElement('div');
+                item.className = 'module-item';
+                item.setAttribute('data-animate', dir);
+
+                var numDiv = document.createElement('div');
+                numDiv.className = 'module-number';
+                numDiv.textContent = mod.number;
+
+                var contentDiv = document.createElement('div');
+                contentDiv.className = 'module-content';
+
+                var imgDiv = document.createElement('div');
+                imgDiv.className = 'module-img';
+                var img = document.createElement('img');
+                img.src = mod.image || '';
+                img.alt = mod.imageAlt || '';
+                img.loading = 'lazy';
+                img.width = 400;
+                img.height = 300;
+                imgDiv.appendChild(img);
+
+                var textDiv = document.createElement('div');
+                textDiv.className = 'module-text';
+                var h3 = document.createElement('h3');
+                h3.textContent = mod.title;
+                var p = document.createElement('p');
+                p.textContent = mod.description;
+                var meta = document.createElement('div');
+                meta.className = 'module-meta';
+                meta.innerHTML = '<span><i class="fa-solid fa-play-circle"></i> ' + esc(mod.classes) + '</span>' +
+                    '<span><i class="fa-solid fa-clock"></i> ' + esc(mod.hours) + '</span>';
+                textDiv.appendChild(h3);
+                textDiv.appendChild(p);
+                textDiv.appendChild(meta);
+
+                contentDiv.appendChild(imgDiv);
+                contentDiv.appendChild(textDiv);
+                item.appendChild(numDiv);
+                item.appendChild(contentDiv);
+                timeline.appendChild(item);
+            });
+        }
+    }
+
+    function loadVideoPreview(d){
+        var section = document.getElementById('video-preview');
+        if(!section) return;
+        var tag = section.querySelector('.section-tag');
+        if(tag && d.tag) tag.textContent = d.tag;
+        var h2 = section.querySelector('.video-info h2');
+        if(h2 && d.title) h2.textContent = d.title;
+        var p = section.querySelector('.video-info > p');
+        if(p && d.description) p.textContent = d.description;
+
+        if(d.features && d.features.length){
+            var ul = section.querySelector('.video-features');
+            if(ul){
+                ul.innerHTML = '';
+                d.features.forEach(function(f){
+                    var li = document.createElement('li');
+                    var icon = document.createElement('i');
+                    icon.className = f.icon;
+                    li.appendChild(icon);
+                    li.appendChild(document.createTextNode(' ' + f.text));
+                    ul.appendChild(li);
+                });
+            }
+        }
+
+        var video = document.getElementById('previewVideo');
+        if(video){
+            if(d.videoSrc) video.src = d.videoSrc;
+            if(d.posterSrc) video.poster = d.posterSrc;
+        }
+    }
+
+    function loadBonus(d){
+        var section = document.getElementById('bonus');
+        if(!section) return;
+        var headerTag = section.querySelector('.section-header .section-tag');
+        if(headerTag && d.tag) headerTag.textContent = d.tag;
+        var headerH2 = section.querySelector('.section-header h2');
+        if(headerH2 && d.title) headerH2.textContent = d.title;
+
+        if(d.items && d.items.length){
+            var grid = section.querySelector('.bonus-grid');
+            if(!grid) return;
+            grid.innerHTML = '';
+            d.items.forEach(function(b, i){
+                var card = document.createElement('div');
+                card.className = 'bonus-card';
+                card.setAttribute('data-animate', 'fade-up');
+                if(i > 0) card.setAttribute('data-delay', String(i * 100));
+
+                var badge = document.createElement('div');
+                badge.className = 'bonus-badge';
+                badge.textContent = b.badge;
+
+                var iconDiv = document.createElement('div');
+                iconDiv.className = 'bonus-icon';
+                var iconEl = document.createElement('i');
+                iconEl.className = b.icon;
+                iconDiv.appendChild(iconEl);
+
+                var h3 = document.createElement('h3');
+                h3.textContent = b.title;
+
+                var p = document.createElement('p');
+                p.textContent = b.description;
+
+                var valDiv = document.createElement('div');
+                valDiv.className = 'bonus-value';
+                var oldVal = document.createElement('span');
+                oldVal.className = 'old-val';
+                oldVal.textContent = b.oldPrice;
+                var freeVal = document.createElement('span');
+                freeVal.className = 'free-val';
+                freeVal.textContent = 'GRATIS';
+                valDiv.appendChild(oldVal);
+                valDiv.appendChild(freeVal);
+
+                card.appendChild(badge);
+                card.appendChild(iconDiv);
+                card.appendChild(h3);
+                card.appendChild(p);
+                card.appendChild(valDiv);
+                grid.appendChild(card);
+            });
+        }
+    }
+
+    function loadSinCurso(d){
+        var section = document.getElementById('sin-curso');
+        if(!section) return;
+        var headerTag = section.querySelector('.section-header .section-tag');
+        if(headerTag && d.tag) headerTag.textContent = d.tag;
+        var headerH2 = section.querySelector('.section-header h2');
+        if(headerH2 && d.title) headerH2.textContent = d.title;
+
+        if(d.items && d.items.length){
+            var costList = section.querySelector('.cost-list');
+            if(!costList) return;
+            costList.innerHTML = '';
+            d.items.forEach(function(c){
+                var item = document.createElement('div');
+                item.className = 'cost-item';
+                var label = document.createElement('span');
+                label.className = 'cost-label';
+                label.textContent = c.label;
+                var price = document.createElement('span');
+                price.className = 'cost-price';
+                price.textContent = c.price;
+                item.appendChild(label);
+                item.appendChild(price);
+                costList.appendChild(item);
+            });
+            var total = document.createElement('div');
+            total.className = 'cost-total';
+            var tLabel = document.createElement('span');
+            tLabel.textContent = d.totalLabel || 'Total en un solo año:';
+            var tAmount = document.createElement('span');
+            tAmount.className = 'total-amount';
+            tAmount.textContent = d.totalAmount || '$435.000+';
+            total.appendChild(tLabel);
+            total.appendChild(tAmount);
+            costList.appendChild(total);
+        }
+    }
+
+    function loadPrecio(d){
+        var section = document.getElementById('precio');
+        if(!section) return;
+        var tag = section.querySelector('.pricing-tag');
+        if(tag && d.tag) tag.textContent = d.tag;
+        var h2 = section.querySelector('.pricing-header h2');
+        if(h2 && d.title) h2.textContent = d.title;
+        var sub = section.querySelector('.pricing-header p');
+        if(sub && d.subtitle) sub.textContent = d.subtitle;
+
+        var oldLabel = section.querySelector('.price-old span:first-child');
+        if(oldLabel && d.oldPriceLabel) oldLabel.textContent = d.oldPriceLabel;
+        var oldPrice = section.querySelector('.price-old .strikethrough');
+        if(oldPrice && d.oldPrice) oldPrice.textContent = d.oldPrice;
+
+        var currency = section.querySelector('.price-current .currency');
+        if(currency && d.currency) currency.textContent = d.currency;
+        var amount = section.querySelector('.price-current .amount');
+        if(amount && d.amount) amount.textContent = d.amount;
+        var period = section.querySelector('.price-current .period');
+        if(period && d.period) period.textContent = d.period;
+
+        var saving = section.querySelector('.price-saving');
+        if(saving){
+            // Calcular ahorro automaticamente
+            var oldNum = d.oldPrice ? parseInt(d.oldPrice.replace(/[^0-9]/g, ''), 10) : 0;
+            var newNum = d.amount ? parseInt(String(d.amount).replace(/[^0-9]/g, ''), 10) : 0;
+            if(oldNum > 0 && newNum > 0 && oldNum > newNum){
+                var diff = oldNum - newNum;
+                saving.textContent = 'Ahorrás $' + diff.toLocaleString('es-AR') + ' hoy';
+            } else if(d.saving){
+                saving.textContent = d.saving;
+            }
+        }
+
+        if(d.features && d.features.length){
+            var ul = section.querySelector('.pricing-features');
+            if(ul){
+                ul.innerHTML = '';
+                d.features.forEach(function(f){
+                    var li = document.createElement('li');
+                    var icon = document.createElement('i');
+                    icon.className = 'fa-solid fa-check-circle';
+                    li.appendChild(icon);
+                    li.appendChild(document.createTextNode(' ' + f));
+                    ul.appendChild(li);
+                });
+            }
+        }
+
+        var cta = section.querySelector('.pricing-body > a.btn');
+        if(cta){
+            if(d.ctaText) cta.textContent = d.ctaText;
+            cta.href = 'checkout.html';
+        }
+
+        var guarantee = section.querySelector('.pricing-guarantee span');
+        if(guarantee && d.guaranteeText) guarantee.textContent = d.guaranteeText;
+
+        // Also update cta-final and mobile-cta with pricing data
+        var fpOld = document.querySelector('.fp-old');
+        if(fpOld && d.oldPrice) fpOld.textContent = d.oldPrice;
+        var fpCurrent = document.querySelector('.fp-current');
+        if(fpCurrent && d.amount && d.period) fpCurrent.textContent = d.currency + d.amount + ' ' + d.period;
+
+        var mcpOld = document.querySelector('.mcp-old');
+        if(mcpOld && d.oldPrice) mcpOld.textContent = d.oldPrice;
+        var mcpCurrent = document.querySelector('.mcp-current');
+        if(mcpCurrent && d.amount) mcpCurrent.textContent = d.currency + d.amount;
     }
 
 })();
