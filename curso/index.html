@@ -302,19 +302,23 @@
                 var html = '<div class="video-player">';
                 html += '<h2>' + esc(lesson.title) + '</h2>';
                 if(lesson.videoUrl){
-                    if(isDirectVideo(lesson.videoUrl)){
-                        html += '<div class="video-container video-native"><video src="' + esc(lesson.videoUrl) + '" controls playsinline preload="metadata" style="position:absolute;top:0;left:0;width:100%;height:100%"></video></div>';
-                    } else {
+                    var videoSrc = resolveUrl(lesson.videoUrl);
+                    if(isDirectVideo(videoSrc)){
+                        html += '<div class="video-container video-native"><video src="' + esc(videoSrc) + '" controls playsinline preload="metadata" style="position:absolute;top:0;left:0;width:100%;height:100%"></video></div>';
+                    } else if(isEmbeddable(lesson.videoUrl)){
                         var embedUrl = convertToEmbed(lesson.videoUrl);
                         html += '<div class="video-container"><iframe src="' + esc(embedUrl) + '" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>';
+                    } else {
+                        html += '<div style="background:var(--card);border-radius:var(--radius);padding:20px;margin-bottom:20px"><i class="fa-solid fa-link" style="margin-right:8px;color:var(--accent)"></i><a href="' + esc(lesson.videoUrl) + '" target="_blank" rel="noopener noreferrer" style="color:var(--accent);font-weight:600">' + esc(lesson.videoUrl) + '</a></div>';
                     }
                 }
                 if(lesson.fileUrl){
+                    var fileSrc = resolveUrl(lesson.fileUrl);
                     var displayName = lesson.fileName || 'Archivo adjunto';
                     html += '<div class="file-download">';
                     html += '<i class="fa-solid fa-file-pdf file-download-icon"></i>';
                     html += '<div class="file-download-info"><div class="file-title">' + esc(displayName) + '</div><div class="file-label">Material descargable</div></div>';
-                    html += '<a class="file-download-btn" href="' + esc(lesson.fileUrl) + '" download="' + esc(displayName) + '" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-download"></i> Descargar</a>';
+                    html += '<a class="file-download-btn" href="' + esc(fileSrc) + '" download="' + esc(displayName) + '" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-download"></i> Descargar</a>';
                     html += '</div>';
                 }
                 if(lesson.description){
@@ -325,8 +329,20 @@
             });
         };
 
+        // Resolve relative paths: uploaded files are stored as "videos/x.mp4" or "files/x.pdf"
+        // but this page is under /curso/, so we need "../" to reach the site root.
+        function resolveUrl(url){
+            if(!url) return url;
+            if(/^https?:\/\//i.test(url) || /^\//.test(url) || /^\.\.\//.test(url)) return url;
+            return '../' + url;
+        }
+
         function isDirectVideo(url){
-            return /\.(mp4|webm|ogg)(\?|$)/i.test(url) || /^videos\//i.test(url);
+            return /\.(mp4|webm|ogg)(\?|$)/i.test(url) || /^(\.\.\/)?videos\//i.test(url);
+        }
+
+        function isEmbeddable(url){
+            return /youtube\.com|youtu\.be|vimeo\.com/i.test(url);
         }
 
         function convertToEmbed(url){
