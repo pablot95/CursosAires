@@ -57,6 +57,21 @@
         .btn-pay.loading .btn-label{display:none}
         @keyframes spin{to{transform:rotate(360deg)}}
 
+        .payment-method-selector{margin-top:24px}
+        .payment-method-selector h3{font-size:15px;font-weight:600;color:var(--dark);margin-bottom:12px}
+        .payment-tabs{display:flex;gap:10px}
+        .payment-tab{flex:1;padding:13px 10px;border:2px solid var(--border);border-radius:10px;cursor:pointer;text-align:center;font-size:13px;font-weight:700;background:#fff;transition:.2s;display:flex;align-items:center;justify-content:center;gap:8px;color:#555}
+        .payment-tab:hover{border-color:#ccc}
+        .payment-tab.active{border-color:var(--accent);background:rgba(244,227,44,.1);color:var(--dark)}
+        .payment-tab.paypal-tab.active{border-color:#0070ba;background:rgba(0,112,186,.08);color:#0070ba}
+        .payment-section{display:none;margin-top:16px}
+        .payment-section.active{display:block}
+        #paypal-button-container{min-height:46px}
+        .paypal-loading{text-align:center;color:var(--text-light);font-size:13px;padding:12px 0}
+        .summary-usd{font-size:12px;color:#0070ba;font-weight:600;text-align:right;margin-top:4px}
+        .payment-badges{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:12px;flex-wrap:wrap}
+        .payment-badges span{font-size:11px;color:var(--text-light);background:#f5f5f5;border-radius:4px;padding:3px 8px}
+
         .secure-badge{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:16px;font-size:12px;color:var(--text-light)}
         .secure-badge i{color:var(--success)}
 
@@ -108,13 +123,37 @@
                         <input type="tel" id="phone" autocomplete="tel">
                     </div>
                 </div>
-
-                <button type="submit" class="btn-pay" id="btnPay">
-                    <span class="spinner"></span>
-                    <span class="btn-label"><i class="fa-solid fa-lock"></i> Pagar con MercadoPago</span>
-                </button>
             </form>
-            <div class="secure-badge"><i class="fa-solid fa-lock"></i> Pago seguro procesado por MercadoPago</div>
+
+            <!-- Selector de método de pago -->
+            <div class="payment-method-selector">
+                <h3><i class="fa-solid fa-credit-card"></i> Elegí cómo pagar</h3>
+                <div class="payment-tabs">
+                    <button class="payment-tab active" id="tab-mp" onclick="selectPayment('mp')">
+                        <i class="fa-solid fa-building-columns"></i> MercadoPago <small style="display:block;font-size:11px;font-weight:400;color:inherit;opacity:.8">En pesos ARS</small>
+                    </button>
+                    <button class="payment-tab paypal-tab" id="tab-paypal" onclick="selectPayment('paypal')">
+                        <i class="fa-brands fa-paypal"></i> PayPal <small style="display:block;font-size:11px;font-weight:400;color:inherit;opacity:.8">En dólares USD</small>
+                    </button>
+                </div>
+
+                <!-- MercadoPago section -->
+                <div class="payment-section active" id="section-mp">
+                    <button type="button" class="btn-pay" id="btnPay">
+                        <span class="spinner"></span>
+                        <span class="btn-label"><i class="fa-solid fa-lock"></i> Pagar con MercadoPago</span>
+                    </button>
+                    <div class="secure-badge"><i class="fa-solid fa-lock"></i> Pago seguro procesado por MercadoPago</div>
+                </div>
+
+                <!-- PayPal section -->
+                <div class="payment-section" id="section-paypal">
+                    <div id="paypal-button-container"><p class="paypal-loading"><i class="fa-solid fa-spinner fa-spin"></i> Cargando PayPal...</p></div>
+                    <div class="secure-badge"><i class="fa-solid fa-lock"></i> Pago seguro procesado por PayPal</div>
+                </div>
+            </div>
+
+            <div class="guarantee-box"><i class="fa-solid fa-shield-halved"></i><span>7 días de garantía. Si no te sirve, te devolvemos el 100%.</span></div>
         </div>
 
         <div class="order-summary">
@@ -122,6 +161,7 @@
             <div class="summary-item"><span class="label">Curso Completo AC Automotor</span><span id="sumPrice">$39.999</span></div>
             <div class="summary-item"><span class="label">4 Bonus incluidos</span><span>Gratis</span></div>
             <div class="summary-total"><span>Total</span><span id="sumTotal">$39.999 ARS</span></div>
+            <div class="summary-usd" id="sumUSD" style="display:none"><i class="fa-brands fa-paypal"></i> &#8776; USD <span id="sumUSDAmount">--</span> con PayPal</div>
             <div class="summary-saving" id="sumSaving"><i class="fa-solid fa-tag"></i> Ahorrás $50.000 con esta oferta</div>
             <div class="guarantee-box"><i class="fa-solid fa-shield-halved"></i><span>7 días de garantía. Si no te sirve, te devolvemos el 100%.</span></div>
         </div>
@@ -147,7 +187,13 @@
         });
         var db = firebase.firestore();
 
-        // Load pricing from Firebase
+        var currentUsdRate = 1400;
+        var currentArsAmount = 39999;
+
+        // Mostrar precio USD con valores por defecto de inmediato
+        updateUsdDisplay();
+
+        // ─── Load pricing from Firebase ────────────────────────────────────────
         db.collection('siteContent').doc('precio').get().then(function(doc){
             if(!doc.exists) return;
             var d = doc.data();
@@ -155,23 +201,157 @@
                 document.getElementById('sumPrice').textContent = d.currency + d.amount;
                 document.getElementById('sumTotal').textContent = d.currency + d.amount + (d.period ? ' ' + d.period : '');
             }
-            // Calcular ahorro automaticamente
-            var oldNum = d.oldPrice ? parseInt(d.oldPrice.replace(/[^0-9]/g, ''), 10) : 0;
-            var newNum = d.amount ? parseInt(String(d.amount).replace(/[^0-9]/g, ''), 10) : 0;
+            if(d.amount){
+                var parsed = parseInt(String(d.amount).replace(/[^0-9]/g,''), 10);
+                if(parsed > 0) currentArsAmount = parsed;
+            }
+            if(d.usdRate && Number(d.usdRate) > 0){
+                currentUsdRate = Number(d.usdRate);
+            }
+            updateUsdDisplay();
+
+            var oldNum = d.oldPrice ? parseInt(d.oldPrice.replace(/[^0-9]/g,''), 10) : 0;
+            var newNum = currentArsAmount;
             if(oldNum > 0 && newNum > 0 && oldNum > newNum){
-                var diff = oldNum - newNum;
-                var el = document.getElementById('sumSaving');
-                el.innerHTML = '<i class="fa-solid fa-tag"></i> Ahorrás $' + diff.toLocaleString('es-AR') + ' con esta oferta';
+                document.getElementById('sumSaving').innerHTML = '<i class="fa-solid fa-tag"></i> Ahorrás $' + (oldNum - newNum).toLocaleString('es-AR') + ' con esta oferta';
             } else if(d.saving){
-                var el = document.getElementById('sumSaving');
-                el.innerHTML = '<i class="fa-solid fa-tag"></i> ' + d.saving;
+                document.getElementById('sumSaving').innerHTML = '<i class="fa-solid fa-tag"></i> ' + d.saving;
             }
         });
 
-        var form = document.getElementById('checkoutForm');
-        var btnPay = document.getElementById('btnPay');
-        var toast = document.getElementById('toast');
+        // ─── Load PayPal config ─────────────────────────────────────────────────
+        var PAYPAL_CLIENT_ID = 'AaumAIrQfgY6XcAKSGkcvbBTDU1gsgxLmaxo-8ziokXGZpOxQ2EbfLEv7JQ1kGK8_oqRLBIBg3UneZ-i';
+        db.collection('siteContent').doc('config').get().then(function(doc){
+            var clientId = (doc.exists && doc.data().paypalClientId) ? doc.data().paypalClientId : PAYPAL_CLIENT_ID;
+            loadPayPalSDK(clientId, 'USD');
+        }).catch(function(){
+            loadPayPalSDK(PAYPAL_CLIENT_ID, 'USD');
+        });
 
+        function updateUsdDisplay(){
+            var usd = Math.round(currentArsAmount / currentUsdRate);
+            var sumUSD = document.getElementById('sumUSD');
+            var sumUSDAmount = document.getElementById('sumUSDAmount');
+            if(sumUSD && sumUSDAmount){
+                sumUSDAmount.textContent = usd.toLocaleString('en-US');
+                sumUSD.style.display = '';
+            }
+        }
+
+        // ─── PayPal SDK loading ─────────────────────────────────────────────────
+        function loadPayPalSDK(clientId, currency){
+            var script = document.createElement('script');
+            script.src = 'https://www.paypal.com/sdk/js?client-id=' + encodeURIComponent(clientId) + '&currency=' + currency + '&intent=capture&disable-funding=credit,card';
+            script.onload = initPayPalButtons;
+            script.onerror = function(){
+                document.getElementById('paypal-button-container').innerHTML = '<p style="color:#e74c3c;font-size:13px;text-align:center">No se pudo cargar PayPal. Intentá con MercadoPago.</p>';
+            };
+            document.head.appendChild(script);
+        }
+
+        function initPayPalButtons(){
+            if(typeof paypal === 'undefined') return;
+            document.getElementById('paypal-button-container').innerHTML = '';
+            paypal.Buttons({
+                style: { layout: 'vertical', color: 'blue', shape: 'rect', label: 'pay' },
+                createOrder: function(data, actions){
+                    if(!validateForm()){
+                        showToast('Completá tus datos antes de pagar', 'error');
+                        return Promise.reject(new Error('Formulario incompleto'));
+                    }
+                    var email    = document.getElementById('email').value.trim().toLowerCase();
+                    var firstName = document.getElementById('firstName').value.trim();
+                    var lastName  = document.getElementById('lastName').value.trim();
+                    var phone    = document.getElementById('phone').value.trim();
+                    return fetch('admin/create_paypal_order.php', {
+                        method: 'POST',
+                        headers: {'Content-Type':'application/json'},
+                        body: JSON.stringify({email:email,firstName:firstName,lastName:lastName,phone:phone})
+                    })
+                    .then(function(r){
+                        if(!r.ok) throw new Error('Error del servidor: ' + r.status + ' - Verificá que los archivos PHP estén subidos al servidor');
+                        return r.json();
+                    })
+                    .then(function(resp){
+                        if(resp.orderID) return resp.orderID;
+                        throw new Error(resp.error || 'Error al crear orden');
+                    });
+                },
+                onApprove: function(data, actions){
+                    showToast('Procesando pago...', 'success');
+                    var email    = document.getElementById('email').value.trim().toLowerCase();
+                    var firstName = document.getElementById('firstName').value.trim();
+                    var lastName  = document.getElementById('lastName').value.trim();
+                    var phone    = document.getElementById('phone').value.trim();
+                    return fetch('admin/capture_paypal_order.php', {
+                        method: 'POST',
+                        headers: {'Content-Type':'application/json'},
+                        body: JSON.stringify({orderID:data.orderID,email:email,firstName:firstName,lastName:lastName,phone:phone})
+                    })
+                    .then(function(r){ return r.json(); })
+                    .then(function(resp){
+                        if(resp.success){
+                            window.location.href = 'checkout_result.html?status=approved&method=paypal';
+                        } else {
+                            showToast('Error al confirmar el pago: ' + (resp.error || 'Intentá de nuevo'), 'error');
+                        }
+                    })
+                    .catch(function(){
+                        showToast('Error de conexión. Contactanos si el cobro fue realizado.', 'error');
+                    });
+                },
+                onError: function(err){
+                    showToast('Hubo un error con PayPal. Intentá de nuevo o usá MercadoPago.', 'error');
+                },
+                onCancel: function(){
+                    showToast('Pago cancelado', 'error');
+                }
+            }).render('#paypal-button-container');
+        }
+
+        // ─── Payment method selector ────────────────────────────────────────────
+        window.selectPayment = function(method){
+            document.getElementById('tab-mp').classList.toggle('active', method === 'mp');
+            document.getElementById('tab-paypal').classList.toggle('active', method === 'paypal');
+            document.getElementById('section-mp').classList.toggle('active', method === 'mp');
+            document.getElementById('section-paypal').classList.toggle('active', method === 'paypal');
+        };
+
+        // ─── MercadoPago flow ───────────────────────────────────────────────────
+        var btnPay = document.getElementById('btnPay');
+        var toast  = document.getElementById('toast');
+
+        btnPay.addEventListener('click', function(){
+            if(!validateForm()) return;
+            btnPay.classList.add('loading');
+            btnPay.disabled = true;
+
+            var email     = document.getElementById('email').value.trim().toLowerCase();
+            var firstName = document.getElementById('firstName').value.trim();
+            var lastName  = document.getElementById('lastName').value.trim();
+            var phone     = document.getElementById('phone').value.trim();
+
+            fetch('admin/create_preference.php', {
+                method: 'POST',
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({email:email,firstName:firstName,lastName:lastName,phone:phone})
+            })
+            .then(function(res){ return res.json(); })
+            .then(function(data){
+                if(data.init_point){
+                    window.location.href = data.init_point;
+                } else {
+                    throw new Error(data.error || 'No se pudo crear el pago');
+                }
+            })
+            .catch(function(err){
+                btnPay.classList.remove('loading');
+                btnPay.disabled = false;
+                showToast('Error al conectar con MercadoPago: ' + err.message, 'error');
+            });
+        });
+
+        // ─── Helpers ────────────────────────────────────────────────────────────
         function showToast(msg, type){
             toast.textContent = msg;
             toast.className = type + ' show';
@@ -183,8 +363,8 @@
             var valid = true;
             var fields = [
                 { id: 'firstName', check: function(v){ return v.trim().length > 0; } },
-                { id: 'lastName', check: function(v){ return v.trim().length > 0; } },
-                { id: 'email', check: function(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); } }
+                { id: 'lastName',  check: function(v){ return v.trim().length > 0; } },
+                { id: 'email',     check: function(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); } }
             ];
             fields.forEach(function(f){
                 var el = document.getElementById(f.id);
@@ -199,46 +379,6 @@
             return valid;
         }
 
-        form.addEventListener('submit', function(e){
-            e.preventDefault();
-            if(!validateForm()) return;
-
-            btnPay.classList.add('loading');
-            btnPay.disabled = true;
-
-            var emailVal = document.getElementById('email').value.trim().toLowerCase();
-            var firstName = document.getElementById('firstName').value.trim();
-            var lastName = document.getElementById('lastName').value.trim();
-            var phone = document.getElementById('phone').value.trim();
-
-            // Send buyer data to backend to create MP preference
-            fetch('admin/create_preference.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    email: emailVal,
-                    firstName: firstName,
-                    lastName: lastName,
-                    phone: phone
-                })
-            })
-            .then(function(res){ return res.json(); })
-            .then(function(data){
-                if(data.init_point){
-                    // Redirect to MercadoPago checkout
-                    window.location.href = data.init_point;
-                } else {
-                    throw new Error(data.error || 'No se pudo crear el pago');
-                }
-            })
-            .catch(function(err){
-                btnPay.classList.remove('loading');
-                btnPay.disabled = false;
-                showToast('Error al conectar con MercadoPago: ' + err.message, 'error');
-            });
-        });
-
-        // Clear errors on input
         document.querySelectorAll('.form-group input').forEach(function(input){
             input.addEventListener('input', function(){
                 input.closest('.form-group').classList.remove('has-error');

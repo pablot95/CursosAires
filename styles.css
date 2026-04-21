@@ -1232,6 +1232,17 @@ header.scrolled {
     color: var(--yellow-dark);
 }
 
+.price-usd {
+    font-size: 0.9rem;
+    color: #0070ba;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.price-usd i {
+    margin-right: 4px;
+}
+
 .pricing-features {
     list-style: none;
     text-align: left;

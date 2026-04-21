@@ -1,0 +1,9 @@
+# Permitir métodos POST y OPTIONS en archivos PHP
+<LimitExcept GET POST HEAD OPTIONS>
+    Deny from all
+</LimitExcept>
+
+# Asegurar que los .php se ejecuten con PHP
+<FilesMatch "\.php$">
+    SetHandler application/x-httpd-php
+</FilesMatch>

@@ -102,6 +102,7 @@
             currency: '$',
             amount: '39.999',
             period: 'ARS',
+            usdRate: 1400,
             saving: 'Ahorrás $50.000 hoy',
             ctaText: 'Quiero Acceder Ahora',
             ctaLink: 'checkout.html',
@@ -117,6 +118,10 @@
                 'Plantilla de Presupuestos',
                 'Comunidad Privada de Alumnos'
             ]
+        },
+        config: {
+            paypalClientId: '',
+            paypalMode: 'sandbox'
         }
     };
 
@@ -245,12 +250,21 @@
                 { key: 'currency', label: 'Símbolo moneda', type: 'text' },
                 { key: 'amount', label: 'Monto actual', type: 'text' },
                 { key: 'period', label: 'Período/Moneda', type: 'text' },
+                { key: 'usdRate', label: 'Tipo de cambio (1 USD = X ARS)', type: 'number', placeholder: 'Ej: 1400' },
                 { key: 'saving', label: 'Texto de ahorro', type: 'text' },
                 { key: 'ctaText', label: 'Texto del botón CTA', type: 'text' },
                 { key: 'ctaLink', label: 'Link del botón CTA', type: 'text' },
                 { key: 'guaranteeText', label: 'Texto de garantía', type: 'text' }
             ],
             list: { key: 'features', label: 'Característica incluida' }
+        },
+        config: {
+            label: 'Configuración PayPal',
+            icon: 'fa-brands fa-paypal',
+            fields: [
+                { key: 'paypalClientId', label: 'PayPal Client ID (va en el frontend)', type: 'text', placeholder: 'AXxx...' },
+                { key: 'paypalMode', label: 'Modo: sandbox o live', type: 'text', placeholder: 'sandbox' }
+            ]
         }
     };
 

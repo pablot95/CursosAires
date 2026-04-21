@@ -545,6 +545,19 @@
             }
         }
 
+        // Precio en USD (fallback 1400 si no está configurado en Firebase)
+        var priceUsd = document.getElementById('priceUSD');
+        var usdAmountEl = section.querySelector('.usd-amount');
+        if(priceUsd && usdAmountEl && d.amount){
+            var arsNum2 = parseInt(String(d.amount).replace(/[^0-9]/g, ''), 10);
+            var rate = (d.usdRate && Number(d.usdRate) > 0) ? Number(d.usdRate) : 1400;
+            if(arsNum2 > 0){
+                var usdVal = Math.round(arsNum2 / rate);
+                usdAmountEl.textContent = usdVal.toLocaleString('en-US');
+                priceUsd.style.display = '';
+            }
+        }
+
         if(d.features && d.features.length){
             var ul = section.querySelector('.pricing-features');
             if(ul){
