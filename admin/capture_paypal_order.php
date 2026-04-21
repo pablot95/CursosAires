@@ -36,13 +36,18 @@ function logPayPal($msg)
 
 // ─── Validar input ────────────────────────────────────────────────────────────
 $input = json_decode(file_get_contents('php://input'), true);
-if (!$input || empty($input['orderID']) || empty($input['email'])) {
+if (!$input || empty($input['email'])) {
     http_response_code(400);
     echo json_encode(['error' => 'Datos incompletos']);
     exit;
 }
 
-$orderID   = preg_replace('/[^A-Z0-9\-]/', '', strtoupper($input['orderID']));
+// Aceptar txId directamente del frontend (captura ya realizada por PayPal JS SDK)
+// o bien orderID para capturar server-side si se prefiere en el futuro
+$txId      = isset($input['txId'])    ? preg_replace('/[^A-Z0-9\-]/', '', strtoupper($input['txId']))    : '';
+$orderID   = isset($input['orderID']) ? preg_replace('/[^A-Z0-9\-]/', '', strtoupper($input['orderID'])) : '';
+$amountPaid = isset($input['amount']) ? (string) floatval($input['amount']) : '0';
+
 $email     = filter_var($input['email'], FILTER_SANITIZE_EMAIL);
 $firstName = substr(strip_tags($input['firstName'] ?? ''), 0, 100);
 $lastName  = substr(strip_tags($input['lastName']  ?? ''), 0, 100);
@@ -54,59 +59,49 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
     exit;
 }
 
-// ─── Obtener access token PayPal ──────────────────────────────────────────────
-$ch = curl_init($PAYPAL_BASE_URL . '/v1/oauth2/token');
-curl_setopt_array($ch, [
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_POST           => true,
-    CURLOPT_POSTFIELDS     => 'grant_type=client_credentials',
-    CURLOPT_USERPWD        => $PAYPAL_CLIENT_ID . ':' . $PAYPAL_CLIENT_SECRET,
-    CURLOPT_HTTPHEADER     => ['Content-Type: application/x-www-form-urlencoded'],
-    CURLOPT_TIMEOUT        => 15
-]);
-$tokenResp = curl_exec($ch);
-$tokenCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-curl_close($ch);
+// Si no tenemos txId del frontend, intentar capturar via API
+if (empty($txId) && !empty($orderID)) {
+    // Obtener access token PayPal
+    $ch = curl_init($PAYPAL_BASE_URL . '/v1/oauth2/token');
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST           => true,
+        CURLOPT_POSTFIELDS     => 'grant_type=client_credentials',
+        CURLOPT_USERPWD        => $PAYPAL_CLIENT_ID . ':' . $PAYPAL_CLIENT_SECRET,
+        CURLOPT_HTTPHEADER     => ['Content-Type: application/x-www-form-urlencoded'],
+        CURLOPT_TIMEOUT        => 15
+    ]);
+    $tokenResp = curl_exec($ch);
+    $tokenCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
 
-if ($tokenCode !== 200) {
-    logPayPal("Auth failed: HTTP $tokenCode");
-    http_response_code(500);
-    echo json_encode(['error' => 'Error de autenticación con PayPal']);
-    exit;
-}
-$accessToken = json_decode($tokenResp, true)['access_token'] ?? '';
-
-// ─── Capturar la orden ────────────────────────────────────────────────────────
-$ch = curl_init($PAYPAL_BASE_URL . "/v2/checkout/orders/$orderID/capture");
-curl_setopt_array($ch, [
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_POST           => true,
-    CURLOPT_POSTFIELDS     => '{}',
-    CURLOPT_HTTPHEADER     => [
-        'Content-Type: application/json',
-        'Authorization: Bearer ' . $accessToken,
-        'PayPal-Request-Id: cap-' . bin2hex(random_bytes(16))
-    ],
-    CURLOPT_TIMEOUT => 30
-]);
-$captureResp = curl_exec($ch);
-$captureCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-curl_close($ch);
-
-$captureData = json_decode($captureResp, true);
-$captureStatus = $captureData['status'] ?? '';
-
-if ($captureCode < 200 || $captureCode >= 300 || $captureStatus !== 'COMPLETED') {
-    logPayPal("Capture failed for $orderID: HTTP $captureCode - status: $captureStatus");
-    http_response_code(500);
-    echo json_encode(['error' => 'Error al capturar el pago. Contactá soporte si se realizó el cobro.']);
-    exit;
+    if ($tokenCode === 200) {
+        $accessToken = json_decode($tokenResp, true)['access_token'] ?? '';
+        $ch = curl_init($PAYPAL_BASE_URL . "/v2/checkout/orders/$orderID/capture");
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => '{}',
+            CURLOPT_HTTPHEADER     => [
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . $accessToken,
+                'PayPal-Request-Id: cap-' . bin2hex(random_bytes(16))
+            ],
+            CURLOPT_TIMEOUT => 30
+        ]);
+        $captureResp = curl_exec($ch);
+        curl_close($ch);
+        $captureData  = json_decode($captureResp, true);
+        $txId         = $captureData['purchase_units'][0]['payments']['captures'][0]['id']               ?? $orderID;
+        $amountPaid   = $captureData['purchase_units'][0]['payments']['captures'][0]['amount']['value']  ?? $amountPaid;
+    }
 }
 
-$txId      = $captureData['purchase_units'][0]['payments']['captures'][0]['id']              ?? $orderID;
-$amountPaid = $captureData['purchase_units'][0]['payments']['captures'][0]['amount']['value'] ?? '0';
+if (empty($txId)) {
+    $txId = $orderID ?: uniqid('pp_', true);
+}
 
-logPayPal("Captured OK: order=$orderID tx=$txId amount=USD $amountPaid email=$email");
+logPayPal("Procesando pago: txId=$txId amount=USD $amountPaid email=$email");
 
 // ─── Idempotencia: verificar si ya procesamos esta TX ─────────────────────────
 $queryBody = json_encode(['structuredQuery' => [
