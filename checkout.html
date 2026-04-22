@@ -187,7 +187,7 @@
         });
         var db = firebase.firestore();
 
-        var currentUsdRate = 1400;
+        var currentUsdAmount = 29;
         var currentArsAmount = 39999;
 
         // Mostrar precio USD con valores por defecto de inmediato
@@ -205,8 +205,9 @@
                 var parsed = parseInt(String(d.amount).replace(/[^0-9]/g,''), 10);
                 if(parsed > 0) currentArsAmount = parsed;
             }
-            if(d.usdRate && Number(d.usdRate) > 0){
-                currentUsdRate = Number(d.usdRate);
+            if(d.usdAmount){
+                var parsedUsd = parseFloat(String(d.usdAmount).replace(/[^0-9.]/g,''));
+                if(parsedUsd > 0) currentUsdAmount = parsedUsd;
             }
             updateUsdDisplay();
 
@@ -229,11 +230,10 @@
         });
 
         function updateUsdDisplay(){
-            var usd = Math.round(currentArsAmount / currentUsdRate);
             var sumUSD = document.getElementById('sumUSD');
             var sumUSDAmount = document.getElementById('sumUSDAmount');
             if(sumUSD && sumUSDAmount){
-                sumUSDAmount.textContent = usd.toLocaleString('en-US');
+                sumUSDAmount.textContent = currentUsdAmount.toLocaleString('en-US');
                 sumUSD.style.display = '';
             }
         }
@@ -259,8 +259,7 @@
                         showToast('Completá tus datos antes de pagar', 'error');
                         return Promise.reject(new Error('Formulario incompleto'));
                     }
-                    var usd = Math.round(currentArsAmount / currentUsdRate);
-                    var usdValue = (usd > 0 ? usd : 29).toFixed(2);
+                    var usdValue = (currentUsdAmount > 0 ? currentUsdAmount : 29).toFixed(2);
                     return actions.order.create({
                         purchase_units: [{
                             description: 'Curso Completo AC Automotor + 4 Bonus',
