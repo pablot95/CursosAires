@@ -71,6 +71,14 @@
         .summary-usd{font-size:12px;color:#0070ba;font-weight:600;text-align:right;margin-top:4px}
         .payment-badges{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:12px;flex-wrap:wrap}
         .payment-badges span{font-size:11px;color:var(--text-light);background:#f5f5f5;border-radius:4px;padding:3px 8px}
+        .payment-tab.binance-tab.active{border-color:#F0B90B;background:rgba(240,185,11,.1);color:#B8860B}
+        .binance-notice{background:#fffbea;border:1.5px solid #F0B90B;border-radius:10px;padding:16px 18px;margin-top:4px;font-size:13.5px;color:#5a4200;line-height:1.6}
+        .binance-notice strong{color:#a07000}
+        .btn-binance{width:100%;padding:16px;background:#F0B90B;color:#1a1a2e;border:none;border-radius:10px;font-size:16px;font-weight:700;font-family:var(--font);cursor:pointer;transition:background .2s,transform .1s;margin-top:16px;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none}
+        .btn-binance:hover{background:#d4a10a}
+        .btn-binance:active{transform:scale(.98)}
+        .btn-wsp{width:100%;padding:14px;background:#25D366;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;font-family:var(--font);cursor:pointer;transition:background .2s;margin-top:10px;display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none}
+        .btn-wsp:hover{background:#1ebe5d}
 
         .secure-badge{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:16px;font-size:12px;color:var(--text-light)}
         .secure-badge i{color:var(--success)}
@@ -135,6 +143,9 @@
                     <button class="payment-tab paypal-tab" id="tab-paypal" onclick="selectPayment('paypal')">
                         <i class="fa-brands fa-paypal"></i> PayPal <small style="display:block;font-size:11px;font-weight:400;color:inherit;opacity:.8">En dólares USD</small>
                     </button>
+                    <button class="payment-tab binance-tab" id="tab-binance" onclick="selectPayment('binance')">
+                        <i class="fa-solid fa-coins"></i> Binance <small style="display:block;font-size:11px;font-weight:400;color:inherit;opacity:.8">Crypto USDT</small>
+                    </button>
                 </div>
 
                 <!-- MercadoPago section -->
@@ -150,6 +161,23 @@
                 <div class="payment-section" id="section-paypal">
                     <div id="paypal-button-container"><p class="paypal-loading"><i class="fa-solid fa-spinner fa-spin"></i> Cargando PayPal...</p></div>
                     <div class="secure-badge"><i class="fa-solid fa-lock"></i> Pago seguro procesado por PayPal</div>
+                </div>
+
+                <!-- Binance section -->
+                <div class="payment-section" id="section-binance">
+                    <div class="binance-notice">
+                        <strong><i class="fa-solid fa-circle-info"></i> ¿Cómo funciona?</strong><br>
+                        1. Hacé clic en el botón para ir al link de pago de Binance Pay.<br>
+                        2. Completá el pago por el monto correspondiente en USDT.<br>
+                        3. <strong>Importante:</strong> una vez abonado, escribinos por WhatsApp enviando el comprobante para que activemos tu acceso al curso.
+                    </div>
+                    <a href="https://s.binance.com/8gAXqdO3" target="_blank" rel="noopener noreferrer" class="btn-binance" id="btnBinance">
+                        <i class="fa-solid fa-coins"></i> Pagar con Binance Pay
+                    </a>
+                    <a href="https://wa.me/5491159396270?text=Hola%2C%20pagu%C3%A9%20con%20Binance%20el%20curso%20de%20AC%20Automotor.%20Te%20env%C3%ADo%20el%20comprobante." target="_blank" rel="noopener noreferrer" class="btn-wsp">
+                        <i class="fa-brands fa-whatsapp"></i> Enviar comprobante por WhatsApp
+                    </a>
+                    <div class="secure-badge" style="margin-top:14px"><i class="fa-solid fa-lock"></i> Pago procesado por Binance Pay · Crypto seguro</div>
                 </div>
             </div>
 
@@ -312,8 +340,10 @@
         window.selectPayment = function(method){
             document.getElementById('tab-mp').classList.toggle('active', method === 'mp');
             document.getElementById('tab-paypal').classList.toggle('active', method === 'paypal');
+            document.getElementById('tab-binance').classList.toggle('active', method === 'binance');
             document.getElementById('section-mp').classList.toggle('active', method === 'mp');
             document.getElementById('section-paypal').classList.toggle('active', method === 'paypal');
+            document.getElementById('section-binance').classList.toggle('active', method === 'binance');
         };
 
         // ─── MercadoPago flow ───────────────────────────────────────────────────
