@@ -121,7 +121,8 @@
         },
         config: {
             paypalClientId: '',
-            paypalMode: 'sandbox'
+            paypalMode: 'sandbox',
+            binanceLink: 'https://s.binance.com/8gAXqdO3'
         }
     };
 
@@ -259,11 +260,12 @@
             list: { key: 'features', label: 'Característica incluida' }
         },
         config: {
-            label: 'Configuración PayPal',
-            icon: 'fa-brands fa-paypal',
+            label: 'Configuración de Pagos',
+            icon: 'fa-solid fa-credit-card',
             fields: [
                 { key: 'paypalClientId', label: 'PayPal Client ID (va en el frontend)', type: 'text', placeholder: 'AXxx...' },
-                { key: 'paypalMode', label: 'Modo: sandbox o live', type: 'text', placeholder: 'sandbox' }
+                { key: 'paypalMode', label: 'Modo: sandbox o live', type: 'text', placeholder: 'sandbox' },
+                { key: 'binanceLink', label: 'Link de pago Binance Pay', type: 'text', placeholder: 'https://s.binance.com/...' }
             ]
         }
     };

@@ -248,11 +248,15 @@
             }
         });
 
-        // ─── Load PayPal config ─────────────────────────────────────────────────
+        // ─── Load PayPal config & Binance link ─────────────────────────────────
         var PAYPAL_CLIENT_ID = 'AaumAIrQfgY6XcAKSGkcvbBTDU1gsgxLmaxo-8ziokXGZpOxQ2EbfLEv7JQ1kGK8_oqRLBIBg3UneZ-i';
         db.collection('siteContent').doc('config').get().then(function(doc){
             var clientId = (doc.exists && doc.data().paypalClientId) ? doc.data().paypalClientId : PAYPAL_CLIENT_ID;
             loadPayPalSDK(clientId, 'USD');
+            if(doc.exists && doc.data().binanceLink){
+                var btnBinance = document.getElementById('btnBinance');
+                if(btnBinance) btnBinance.href = doc.data().binanceLink;
+            }
         }).catch(function(){
             loadPayPalSDK(PAYPAL_CLIENT_ID, 'USD');
         });
